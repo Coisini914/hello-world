@@ -9,5 +9,3 @@ dbinom(x, size, prob, log=FALSE)    ###f(x)：计算每个点的概率密度分�
 pbinom(q, size, prob, lower.tail=TRUE, log.p=FALSE)   ###F(q)：事情的累积概率
 qbinom(p, size, prob, lower.tail=TRUE, log.p=FALSE)   ###下分位数：获取概率值，并生成一个其累加值与概率值匹配的数字
 rbinom(n, size, prob)               ###生成随机数：从给定样本产生给定概率的所需数量的随机值
-
-######
