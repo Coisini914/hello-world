@@ -1,0 +1,69 @@
+#3.1 引言
+######生成均匀随机数
+runif(n)                            ###产生0到1上的长度为n的向量
+runif（n,a,b)                       ###产生a到b上的长度为n的向量
+matrix(runif(n*m), nrow=n, ncol=m)  ###产生0到1上的n*m矩阵
+
+######常见的概率分布的随机分布程序
+dbinom(x, size, prob, log=FALSE)                      ###f(x)：计算每个点的概率密度分布
+pbinom(q, size, prob, lower.tail=TRUE, log.p=FALSE)   ###F(q)：事情的累积概率
+qbinom(p, size, prob, lower.tail=TRUE, log.p=FALSE)   ###下分位数：获取概率值，并生成一个其累加值与概率值匹配的数字
+rbinom(n, size, prob)                                 ###生成随机数：从给定样本产生给定概率的所需数量的随机值
+
+
+
+#3.2 逆变换法
+##例3.2 使用逆变换法产生密度函数为f(x)=3x^2(0<x<1)的随机样本
+分析：F(x)=x^3,0<x<1;F^-1(u)=u^(1/3)
+n <- 1000
+u <- runif(n)                                        ###生成0到1上的均匀随机数
+x <- u^(1/3)
+hist(x, prob = TRUE, main = bquote(f(x)==3*x^2))     ###画出概率直方图，bquote是标注曲线标题
+y <- seq(0, 1, 0.01)
+lines(y, 3*y^2)                                      ###画出理论密度曲线
+
+##例3.4 使用逆变换法生成0-1分布的随机样本（p=0.4）
+分析：F(0)=0.6,F(1)=0.4;当u>0.6时，F^-1(u)=1,当u<0.6时，F^-1(u)=0。
+n <- 1000
+p <- 0.4
+u <- runif(n)
+x <- as.integer(u > 0.6)   ###(u > 0.6)是一个逻辑向量
+
+#例3.5 使用逆变换法生成参数为p=0.25的随机几何样本
+分析：F(x)=1-q^(x+1),x=0,1,2,...;每个随机数都要计算 1-q^x<u<=1-q^(x+1)，解为x+1=[log(1-u)/log(q)]([]是取整函数)
+n <- 1000
+p <- 0.25
+u <- runif(n)
+k <- ceiling(log(1-u) / log(1-p)) - 1
+
+#例3.6 使用逆变换产生参数为theta的对数分布的随机样本
+###rlogarithmic函数用来生成一个服从参数为0.5的对数分布的随机样本（标准的）
+rlogarithmic <- function(n, theta) {
+    u <- runif(n)                                         ###设置cdf矢量的初始长度
+    N <- ceiling(-16 / log10(theta))
+    k <- 1:N
+    a <- -1/log(1-theta)
+    fk <- exp(log(a) + k * log(theta) - log(k))
+    Fk <- cumsum(fk)
+    x <- integer(n)
+    for (i in 1:n) {
+        x[i] <- as.integer(sum(u[i] > Fk)) #F^{-1}(u)-1
+        while (x[i] == N) {                               ###如果x[i]=N，我们需要扩展cdf，但是这种情况基本不存在，因为N很大
+            logf <- log(a) + (N+1)*log(theta) - log(N+1)
+            fk <- c(fk, exp(logf))
+            Fk <- c(Fk, Fk[N] + fk[N+1])
+            N <- N + 1
+            x[i] <- as.integer(sum(u[i] > Fk))
+        }
+    }
+    x + 1
+}
+
+n <- 1000
+theta <- 0.5
+x <- rlogarithmic(n, theta)             ###计算对数分布的密度矩阵来和我们的随机数作比较
+k <- sort(unique(x))
+p <- -1 / log(1 - theta) * theta^k / k
+se <- sqrt(p*(1-p)/n)                   ###标准方差
+
+round(rbind(table(x)/n, p, se),3)       ###得到比较得到的结果
