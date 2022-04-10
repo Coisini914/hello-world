@@ -67,3 +67,22 @@ p <- -1 / log(1 - theta) * theta^k / k
 se <- sqrt(p*(1-p)/n)                   ###标准方差
 
 round(rbind(table(x)/n, p, se),3)       ###得到比较得到的结果
+
+#例3.7 使用接受拒绝法得到beta分布(alpha=2,beta=2).选g(x)为U(0,1）分布的密度函数
+n <- 1000
+k <- 0             ###能够接受的次数
+j <- 0             #生成1000个Beta变量的重复次数
+y <- numeric(n)
+
+while (k < n) {
+    u <- runif(1)
+    j <- j + 1
+    x <- runif(1)  #从g得到的随机变量
+    if (x * (1-x) > u) {
+        #we accept x
+        k <- k + 1
+        y[k] <- x
+    }
+}
+
+j
